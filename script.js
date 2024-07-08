@@ -168,7 +168,8 @@ function performAnalysis(data, numTreatments, numReplications, design, transform
                 </tr>
             </thead>
             <tbody>
-                ${tukeyResults.comparisons.map(comp => `<tr>
+                ${tukeyResults.comparisons.map(comp => `
+                    <tr>
                         <td>${comp.pair}</td>
                         <td>${comp.difference}</td>
                         <td>${comp.significant ? 'Yes' : 'No'}</td>
@@ -177,243 +178,264 @@ function performAnalysis(data, numTreatments, numReplications, design, transform
             </tbody>
         </table>
     `;
-Copy// Add visualizations
-resultsHTML += `
-    <h4>Visualizations:</h4>
-    <div class="grid">
-        <div>
-            <canvas id="treatmentMeansChart"></canvas>
-        </div>
-        <div>
-            <canvas id="boxPlotChart"></canvas>
-        </div>
-        <div>
-            <canvas id="scatterPlotChart"></canvas>
-        </div>
-    </div>
-`;
 
-// Create charts after a short delay to ensure the canvas elements are ready
-setTimeout(() => {
-    createTreatmentMeansChart(treatmentMeans);
-    createBoxPlotChart(data);
-    createScatterPlot(data);
-}, 100);
+    // Add visualizations
+    resultsHTML += `
+        <h4>Visualizations:</h4>
+        <div class="grid">
+            <div>
+                <canvas id="treatmentMeansChart"></canvas>
+            </div>
+            <div>
+                <canvas id="boxPlotChart"></canvas>
+            </div>
+            <div>
+                <canvas id="scatterPlotChart"></canvas>
+            </div>
+        </div>
+    `;
 
-return resultsHTML;
+    // Create charts after a short delay to ensure the canvas elements are ready
+    setTimeout(() => {
+        createTreatmentMeansChart(treatmentMeans);
+        createBoxPlotChart(data);
+        createScatterPlot(data);
+    }, 100);
+
+    return resultsHTML;
 }
+
 function transformValue(value, transformation) {
-switch (transformation) {
-case 'square_root':
-return Math.sqrt(value);
-case 'angular':
-return Math.asin(Math.sqrt(value / 100)) * (180 / Math.PI);
-default:
-return value;
-}
-}
-function performTukeyHSD(data, treatmentMeans, errorMS, numReplications) {
-const q = 4.33; // q value for 3 treatments, 9 degrees of freedom at 0.05 significance
-const HSD = q * Math.sqrt(errorMS / numReplications);
-Copylet comparisons = [];
-for (let i = 0; i < treatmentMeans.length; i++) {
-    for (let j = i + 1; j < treatmentMeans.length; j++) {
-        const diff = Math.abs(treatmentMeans[i] - treatmentMeans[j]);
-        const significant = diff > HSD;
-        comparisons.push({
-            pair: `${String.fromCharCode(65 + i)} - ${String.fromCharCode(65 + j)}`,
-            difference: diff.toFixed(2),
-            significant: significant
-        });
+    switch (transformation) {
+        case 'square_root':
+            return Math.sqrt(value);
+        case 'angular':
+            return Math.asin(Math.sqrt(value / 100)) * (180 / Math.PI);
+        default:
+            return value;
     }
 }
 
-return { HSD, comparisons };
-}
-function downloadResults(results) {
-const formattedResults = results
-.replace(/<h3>/g, '\n\n### ')
-.replace(/</h3>/g, '\n')
-.replace(/<h4>/g, '\n#### ')
-.replace(/</h4>/g, '\n')
-.replace(/<p>/g, '\n')
-.replace(/</p>/g, '\n')
-.replace(/<ul>/g, '')
-.replace(/</ul>/g, '')
-.replace(/<li>/g, '- ')
-.replace(/</li>/g, '\n')
-.replace(/<table>/g, '\n')
-.replace(/</table>/g, '\n')
-.replace(/<thead>/g, '')
-.replace(/</thead>/g, '')
-.replace(/<tbody>/g, '')
-.replace(/</tbody>/g, '')
-.replace(/<tr>/g, '')
-.replace(/</tr>/g, '\n')
-.replace(/<th>/g, '| ')
-.replace(/</th>/g, ' ')
-.replace(/<td>/g, '| ')
-.replace(/</td>/g, ' ');
-Copyconst blob = new Blob([formattedResults], { type: 'text/plain' });
-const url = URL.createObjectURL(blob);
-const a = document.createElement('a');
-a.href = url;
-a.download = 'one_factor_analysis_results.txt';
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
-URL.revokeObjectURL(url);
-}
-function createTreatmentMeansChart(treatmentMeans) {
-const ctx = document.getElementById('treatmentMeansChart').getContext('2d');
-new Chart(ctx, {
-type: 'bar',
-data: {
-labels: treatmentMeans.map((_, i) => Treatment ${String.fromCharCode(65 + i)}),
-datasets: [{
-label: 'Treatment Means',
-data: treatmentMeans,
-backgroundColor: 'rgba(75, 192, 192, 0.6)',
-borderColor: 'rgba(75, 192, 192, 1)',
-borderWidth: 1
-}]
-},
-options: {
-responsive: true,
-plugins: {
-title: {
-display: true,
-text: 'Treatment Means Comparison'
-},
-},
-scales: {
-y: {
-beginAtZero: true,
-title: {
-display: true,
-text: 'Mean Value'
-}
-}
-}
-}
-});
-}
-function createBoxPlotChart(data) {
-const ctx = document.getElementById('boxPlotChart').getContext('2d');
-Copyconst boxplotData = data.map((treatment, i) => {
-    const sorted = treatment.sort((a, b) => a - b);
-    const q1 = sorted[Math.floor(sorted.length / 4)];
-    const median = sorted[Math.floor(sorted.length / 2)];
-    const q3 = sorted[Math.floor(3 * sorted.length / 4)];
-    const min = sorted[0];
-    const max = sorted[sorted.length - 1];
+function performTukeyHSD(data, treatmentMeans, errorMS, numReplications) {
+    const q = 4.33; // q value for 3 treatments, 9 degrees of freedom at 0.05 significance
+    const HSD = q * Math.sqrt(errorMS / numReplications);
 
-    return {
-        label: `Treatment ${String.fromCharCode(65 + i)}`,
-        data: [
-            { x: String.fromCharCode(65 + i), y: [min, q1, median, q3, max] }
-        ],
-        backgroundColor: `hsla(${i * 360 / data.length}, 70%, 50%, 0.5)`,
-        borderColor: `hsla(${i * 360 / data.length}, 70%, 50%, 1)`,
-        borderWidth: 1
-    };
-});
-
-new Chart(ctx, {
-    type: 'boxplot',
-    data: {
-        datasets: boxplotData
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            title: {
-                display: true,
-                text: 'Box Plot of Treatments'
-            },
-            legend: {
-                display: false
-            }
-        },
-        scales: {
-            y: {
-                title: {
-                    display: true,
-                    text: 'Value'
-                }
-            }
+    let comparisons = [];
+    for (let i = 0; i < treatmentMeans.length; i++) {
+        for (let j = i + 1; j < treatmentMeans.length; j++) {
+            const diff = Math.abs(treatmentMeans[i] - treatmentMeans[j]);
+            const significant = diff > HSD;
+            comparisons.push({
+                pair: `${String.fromCharCode(65 + i)} - ${String.fromCharCode(65 + j)}`,
+                difference: diff.toFixed(2),
+                significant: significant
+            });
         }
     }
-});
+
+    return { HSD, comparisons };
 }
-function createScatterPlot(data) {
-const ctx = document.getElementById('scatterPlotChart').getContext('2d');
-const datasets = data.map((treatment, i) => ({
-label: Treatment ${String.fromCharCode(65 + i)},
-data: treatment.map((value, j) => ({ x: j + 1, y: value })),
-backgroundColor: hsla(${i * 360 / data.length}, 70%, 50%, 0.7),
-}));
-Copynew Chart(ctx, {
-    type: 'scatter',
-    data: { datasets },
-    options: {
-        responsive: true,
-        plugins: {
-            title: { display: true, text: 'Scatter Plot of Treatments' },
-            tooltip: {
-                callbacks: {
-                    label: (context) => {
-                        const { x, y } = context.parsed;
-                        return `Replication: ${x}, Value: ${y}`;
+
+function downloadResults(results) {
+    const formattedResults = results
+        .replace(/<h3>/g, '\n\n### ')
+        .replace(/<\/h3>/g, '\n')
+        .replace(/<h4>/g, '\n#### ')
+        .replace(/<\/h4>/g, '\n')
+        .replace(/<p>/g, '\n')
+        .replace(/<\/p>/g, '\n')
+        .replace(/<ul>/g, '')
+        .replace(/<\/ul>/g, '')
+        .replace(/<li>/g, '- ')
+        .replace(/<\/li>/g, '\n')
+        .replace(/<table>/g, '\n')
+        .replace(/<\/table>/g, '\n')
+        .replace(/<thead>/g, '')
+        .replace(/<\/thead>/g, '')
+        .replace(/<tbody>/g, '')
+        .replace(/<\/tbody>/g, '')
+        .replace(/<tr>/g, '')
+        .replace(/<\/tr>/g, '\n')
+        .replace(/<th>/g, '| ')
+        .replace(/<\/th>/g, ' ')
+        .replace(/<td>/g, '| ')
+        .replace(/<\/td>/g, ' ');
+
+    const blob = new Blob([formattedResults], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'one_factor_analysis_results.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function createTreatmentMeansChart(treatmentMeans) {
+    const ctx = document.getElementById('treatmentMeansChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: treatmentMeans.map((_, i) => `Treatment ${String.fromCharCode(65 + i)}`),
+            datasets: [{
+                label: 'Treatment Means',
+                data: treatmentMeans,
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Treatment Means Comparison'
+                },
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Mean Value'
                     }
                 }
             }
-        },
-        scales: {
-            x: { 
-                title: { display: true, text: 'Replication' },
-                stepSize: 1
-            },
-            y: { title: { display: true, text: 'Value' } }
         }
-    }
-});
+    });
 }
+
+function createBoxPlotChart(data) {
+    const ctx = document.getElementById('boxPlotChart').getContext('2d');
+
+    const boxplotData = data.map((treatment, i) => {
+        const sorted = treatment.sort((a, b) => a - b);
+        const q1 = sorted[Math.floor(sorted.length / 4)];
+        const median = sorted[Math.floor(sorted.length / 2)];
+        const q3 = sorted[Math.floor(3 * sorted.length / 4)];
+        const min = sorted[0];
+        const max = sorted[sorted.length - 1];
+
+        return {
+            label: `Treatment ${String.fromCharCode(65 + i)}`,
+            data: [
+                { x: String.fromCharCode(65 + i), y: [min, q1, median, q3, max] }
+            ],
+            backgroundColor: `hsla(${i * 360 / data.length}, 70%, 50%, 0.5)`,
+            borderColor: `hsla(${i * 360 / data.length}, 70%, 50%, 1)`,
+            borderWidth: 1
+        };
+    });
+
+    new Chart(ctx, {
+        type: 'boxplot',
+        data: {
+            datasets: boxplotData
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Box Plot of Treatments'
+                },
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Value'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createScatterPlot(data) {
+    const ctx = document.getElementById('scatterPlotChart').getContext('2d');
+    const datasets = data.map((treatment, i) => ({
+        label: `Treatment ${String.fromCharCode(65 + i)}`,
+        data: treatment.map((value, j) => ({ x: j + 1, y: value })),
+        backgroundColor: `hsla(${i * 360 / data.length}, 70%, 50%, 0.7)`,
+    }));
+
+    new Chart(ctx, {
+        type: 'scatter',
+        data: { datasets },
+        options: {
+            responsive: true,
+            plugins: {
+                title: { display: true, text: 'Scatter Plot of Treatments' },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            const { x, y } = context.parsed;
+                            return `Replication: ${x}, Value: ${y}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { 
+                    title: { display: true, text: 'Replication' },
+                    stepSize: 1
+                },
+                y: { title: { display: true, text: 'Value' } }
+            }
+        }
+    });
+}
+
 function importData(event) {
-const file = event.target.files[0];
-const reader = new FileReader();
-reader.onload = function(e) {
-document.getElementById('dataInput').value = e.target.result;
-};
-reader.readAsText(file);
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('dataInput').value = e.target.result;
+    };
+    reader.readAsText(file);
 }
+
 function exportData() {
-const data = document.getElementById('dataInput').value;
-const blob = new Blob([data], { type: 'text/plain' });
-const url = URL.createObjectURL(blob);
-const a = document.createElement('a');
-a.href = url;
-a.download = 'experiment_data.txt';
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
-URL.revokeObjectURL(url);
+    const data = document.getElementById('dataInput').value;
+    const blob = new Blob([data], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'experiment_data.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
+
 function loadExample(exampleNumber) {
-const numTreatmentsInput = document.getElementById('numTreatments');
-const numReplicationsInput = document.getElementById('numReplications');
-const numSetsInput = document.getElementById('numSets');
-const designInput = document.getElementById('design');
-const dataInput = document.getElementById('dataInput');
-Copyif (exampleNumber === 1) {
-    numTreatmentsInput.value = 3;
-    numReplicationsInput.value = 4;
-    numSetsInput.value = 1;
-    designInput.value = 'CRD';
-    dataInput.value = `123 123 131 133
+    const numTreatmentsInput = document.getElementById('numTreatments');
+    const numReplicationsInput = document.getElementById('numReplications');
+    const numSetsInput = document.getElementById('numSets');
+    const designInput = document.getElementById('design');
+    const dataInput = document.getElementById('dataInput');
+
+    if (exampleNumber === 1) {
+        numTreatmentsInput.value = 3;
+        numReplicationsInput.value = 4;
+        numSetsInput.value = 1;
+        designInput.value = 'CRD';
+        dataInput.value = `123 123 131 133
 142 149 147 134
-147 172 143 139;     } else if (exampleNumber === 2) {         numTreatmentsInput.value = 3;         numReplicationsInput.value = 4;         numSetsInput.value = 1;         designInput.value = 'RBD';         dataInput.value = 25.0 23.0 24.3 26.5
+147 172 143 139`;
+    } else if (exampleNumber === 2) {
+        numTreatmentsInput.value = 3;
+        numReplicationsInput.value = 4;
+        numSetsInput.value = 1;
+        designInput.value = 'RBD';
+        dataInput.value = `25.0 23.0 24.3 26.5
 28.5 24.9 27.3 29.2
 41.3 42.5 41.3 46.5`;
-}
+    }
 }
