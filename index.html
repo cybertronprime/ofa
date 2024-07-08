@@ -10,11 +10,15 @@
         body > main {
             padding-top: 0;
         }
-      nav {
+     nav {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
         .content-wrapper {
             max-height: calc(100vh - 4rem);
@@ -489,26 +493,34 @@ significant: significant
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }
+         function loadExample(exampleNumber) {
+            const numTreatmentsInput = document.getElementById('numTreatments');
+            const numReplicationsInput = document.getElementById('numReplications');
+            const numSetsInput = document.getElementById('numSets');
+            const designInput = document.getElementById('design');
+            const dataInput = document.getElementById('dataInput');
 
-    function loadExample(exampleNumber) {
-        const numTreatmentsInput = document.getElementById('numTreatments');
-        const numReplicationsInput = document.getElementById('numReplications');
-        const numSetsInput = document.getElementById('numSets');
-        const designInput = document.getElementById('design');
-        const dataInput = document.getElementById('dataInput');
-
-        if (exampleNumber === 1) {
-            numTreatmentsInput.value = 3;
-            numReplicationsInput.value = 4;
-            numSetsInput.value = 1;
-            designInput.value = 'CRD';
-            dataInput.value = `123 123 131 133
+            if (exampleNumber === 1) {
+                numTreatmentsInput.value = 3;
+                numReplicationsInput.value = 4;
+                numSetsInput.value = 1;
+                designInput.value = 'CRD';
+                dataInput.value = `123 123 131 133
 142 149 147 134
-147 172 143 139;             } else if (exampleNumber === 2) {                 numTreatmentsInput.value = 3;                 numReplicationsInput.value = 4;                 numSetsInput.value = 1;                 designInput.value = 'RBD';                 dataInput.value = 25.0 23.0 24.3 26.5
+147 172 143 139`;
+            } else if (exampleNumber === 2) {
+                numTreatmentsInput.value = 3;
+                numReplicationsInput.value = 4;
+                numSetsInput.value = 1;
+                designInput.value = 'RBD';
+                dataInput.value = `25.0 23.0 24.3 26.5
 28.5 24.9 27.3 29.2
 41.3 42.5 41.3 46.5`;
-}
-}
+            }
+        }
+
+   
+
 </script>
 </body>
 </html>
