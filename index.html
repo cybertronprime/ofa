@@ -1,138 +1,131 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enhanced One Factor Analysis Tool</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/picocss/1.5.0/pico.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <style>
+        body > main {
+            padding-top: 0;
+        }
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
         .content-wrapper {
-            height: calc(100vh - 4rem);
+            max-height: calc(100vh - 4rem);
             overflow-y: auto;
+        }
+        canvas {
+            max-width: 100%;
         }
     </style>
 </head>
-<body class="bg-gray-100">
-    <nav class="bg-blue-600 p-4">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-white text-xl font-bold">One Factor Analysis Tool</h1>
-            <ul class="flex space-x-4">
-                <li><a href="#tool" class="text-white hover:text-blue-200">Tool</a></li>
-                <li><a href="#examples" class="text-white hover:text-blue-200">Examples</a></li>
-                <li><a href="#description" class="text-white hover:text-blue-200">Description</a></li>
-            </ul>
-        </div>
+<body>
+    <nav class="container-fluid">
+        <ul>
+            <li><strong>One Factor Analysis Tool</strong></li>
+        </ul>
+        <ul>
+            <li><a href="#tool">Tool</a></li>
+            <li><a href="#examples">Examples</a></li>
+            <li><a href="#description">Description</a></li>
+        </ul>
     </nav>
 
-    <div class="content-wrapper container mx-auto p-4">
-        <div id="tool" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-            <h2 class="text-2xl font-bold mb-4">Analysis Tool</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="numTreatments">
-                        Number of Treatments:
-                    </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="numTreatments" type="number" value="3" min="2">
-                </div>
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="numReplications">
-                        Number of Replications:
-                    </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="numReplications" type="number" value="4" min="2">
-                </div>
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="numSets">
-                        Number of Sets (Characters):
-                    </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="numSets" type="number" value="2" min="1">
-                </div>
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="design">
-                        Select Design:
-                    </label>
-                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="design">
-                        <option value="CRD">Completely Randomized Design (CRD)</option>
-                        <option value="RBD">Randomized Complete Block Design (RBD)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="transformation">
+    <main class="container">
+        <div class="content-wrapper">
+            <section id="tool">
+                <h2>Analysis Tool</h2>
+                <form>
+                    <div class="grid">
+                        <label for="numTreatments">
+                            Number of Treatments:
+                            <input type="number" id="numTreatments" name="numTreatments" value="3" min="2" required>
+                        </label>
+                        <label for="numReplications">
+                            Number of Replications:
+                            <input type="number" id="numReplications" name="numReplications" value="4" min="2" required>
+                        </label>
+                    </div>
+                    <div class="grid">
+                        <label for="numSets">
+                            Number of Sets:
+                            <input type="number" id="numSets" name="numSets" value="1" min="1" required>
+                        </label>
+                        <label for="design">
+                            Select Design:
+                            <select id="design" name="design" required>
+                                <option value="CRD">Completely Randomized Design (CRD)</option>
+                                <option value="RBD">Randomized Complete Block Design (RBD)</option>
+                            </select>
+                        </label>
+                    </div>
+                    <label for="transformation">
                         Transformation:
+                        <select id="transformation" name="transformation" required>
+                            <option value="none">No Transformation</option>
+                            <option value="square_root">Square Root</option>
+                            <option value="angular">Angular</option>
+                        </select>
                     </label>
-                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="transformation">
-                        <option value="none">No Transformation</option>
-                        <option value="square_root">Square Root</option>
-                        <option value="angular">Angular</option>
-                    </select>
-                </div>
-            </div>
-            <div class="mt-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="dataInput">
-                    Enter Data (space or tab separated):
-                </label>
-                <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="dataInput" rows="6">123 123 131 133
+                    <label for="dataInput">
+                        Enter Data (space or tab separated):
+                        <textarea id="dataInput" name="dataInput" rows="6" required>123 123 131 133
 142 149 147 134
-147 172 143 139
-25.0 23.0 24.3 26.5
-28.5 24.9 27.3 29.2
-41.3 42.5 41.3 46.5</textarea>
-            </div>
-            <div class="mt-4">
-                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="analyzeData()">
-                    Analyze Data
-                </button>
-            </div>
-        </div>
+147 172 143 139</textarea>
+                    </label>
+                    <button type="button" onclick="analyzeData()">Analyze Data</button>
+                </form>
+            </section>
 
-        <div id="results" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"></div>
+            <section id="results"></section>
 
-        <div id="examples" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-            <h2 class="text-2xl font-bold mb-4">Examples</h2>
-            <h3 class="text-xl font-bold mb-2">Example 1: Crop Yield Study (CRD)</h3>
-            <p class="mb-2">A researcher wants to compare the yield of three different corn varieties (A, B, C) using a Completely Randomized Design with four replications.</p>
-            <pre class="bg-gray-100 p-2 rounded">
-123 123 131 133  # Variety A
+            <section id="examples">
+                <h2>Examples</h2>
+                <article>
+                    <h3>Example 1: Crop Yield Study (CRD)</h3>
+                    <p>A researcher wants to compare the yield of three different corn varieties (A, B, C) using a Completely Randomized Design with four replications.</p>
+                    <pre><code>123 123 131 133  # Variety A
 142 149 147 134  # Variety B
-147 172 143 139  # Variety C
-            </pre>
-            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2" onclick="loadExample(1)">
-                Load Example 1
-            </button>
-
-            <h3 class="text-xl font-bold mb-2 mt-4">Example 2: Fertilizer Effect Study (RBD)</h3>
-            <p class="mb-2">An agronomist is studying the effect of three fertilizer treatments (A, B, C) on tomato plant height using a Randomized Complete Block Design with four blocks.</p>
-            <pre class="bg-gray-100 p-2 rounded">
-25.0 23.0 24.3 26.5  # Treatment A
+147 172 143 139  # Variety C</code></pre>
+                    <button onclick="loadExample(1)">Load Example 1</button>
+                </article>
+                <article>
+                    <h3>Example 2: Fertilizer Effect Study (RBD)</h3>
+                    <p>An agronomist is studying the effect of three fertilizer treatments (A, B, C) on tomato plant height using a Randomized Complete Block Design with four blocks.</p>
+                    <pre><code>25.0 23.0 24.3 26.5  # Treatment A
 28.5 24.9 27.3 29.2  # Treatment B
-41.3 42.5 41.3 46.5  # Treatment C
-            </pre>
-            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2" onclick="loadExample(2)">
-                Load Example 2
-            </button>
-        </div>
+41.3 42.5 41.3 46.5  # Treatment C</code></pre>
+                    <button onclick="loadExample(2)">Load Example 2</button>
+                </article>
+            </section>
 
-        <div id="description" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-            <h2 class="text-2xl font-bold mb-4">Description</h2>
-            <p class="mb-4">
-                The One Factor Analysis Tool is designed to perform statistical analysis on experimental data with a single factor (treatment) and multiple replications. It supports both Completely Randomized Design (CRD) and Randomized Complete Block Design (RBD).
-            </p>
-            <h3 class="text-xl font-bold mb-2">Key Features:</h3>
-            <ul class="list-disc list-inside mb-4">
-                <li>Flexible input for multiple treatments and replications</li>
-                <li>Support for CRD and RBD designs</li>
-                <li>Optional data transformations (Square Root and Angular)</li>
-                <li>Calculation of ANOVA table</li>
-                <li>Visualization of results using charts</li>
-            </ul>
-            <p class="mb-4">
-                This tool calculates the Sum of Squares (SS), Degrees of Freedom (DF), Mean Squares (MS), and F-value for treatments, blocks (in RBD), and error. It also provides the grand mean and individual treatment means.
-            </p>
-            <p>
-                Use this tool to analyze your experimental data and draw conclusions about the significance of treatment effects in your study.
-            </p>
+            <section id="description">
+                <h2>Description</h2>
+                <p>
+                    The One Factor Analysis Tool is designed to perform statistical analysis on experimental data with a single factor (treatment) and multiple replications. It supports both Completely Randomized Design (CRD) and Randomized Complete Block Design (RBD).
+                </p>
+                <h3>Key Features:</h3>
+                <ul>
+                    <li>Flexible input for multiple treatments and replications</li>
+                    <li>Support for CRD and RBD designs</li>
+                    <li>Optional data transformations (Square Root and Angular)</li>
+                    <li>Calculation of ANOVA table</li>
+                    <li>Visualization of results using charts</li>
+                </ul>
+                <p>
+                    This tool calculates the Sum of Squares (SS), Degrees of Freedom (DF), Mean Squares (MS), and F-value for treatments, blocks (in RBD), and error. It also provides the grand mean and individual treatment means.
+                </p>
+                <p>
+                    Use this tool to analyze your experimental data and draw conclusions about the significance of treatment effects in your study.
+                </p>
+            </section>
         </div>
-    </div>
+    </main>
 
     <script>
         function analyzeData() {
@@ -146,12 +139,22 @@
             // Parse the input data
             const data = dataInput.trim().split('\n').map(row => row.trim().split(/\s+/).map(Number));
             
+            // Validate input data
+            if (data.length !== numTreatments * numSets) {
+                alert(`Error: Expected ${numTreatments * numSets} rows of data, but got ${data.length}.`);
+                return;
+            }
+            if (data.some(row => row.length !== numReplications)) {
+                alert(`Error: Each row should have ${numReplications} values.`);
+                return;
+            }
+            
             // Perform the analysis for each set
             let allResults = '';
             for (let set = 0; set < numSets; set++) {
                 const setData = data.slice(set * numTreatments, (set + 1) * numTreatments);
                 const results = performAnalysis(setData, numTreatments, numReplications, design, transformation);
-                allResults += `<h2 class="text-2xl font-bold mb-4">Analysis for Set ${set + 1}</h2>` + results;
+                allResults += `<article><h3>Analysis for Set ${set + 1}</h3>${results}</article>`;
             }
             
             // Display the results
@@ -160,7 +163,6 @@
             // Add download button
             const downloadBtn = document.createElement('button');
             downloadBtn.textContent = 'Download Results';
-            downloadBtn.className = 'bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-4';
             downloadBtn.onclick = () => downloadResults(allResults);
             document.getElementById('results').appendChild(downloadBtn);
         }
@@ -210,66 +212,66 @@
             
             // Prepare results HTML
             let resultsHTML = `
-                <table class="w-full mb-4">
+                <table>
                     <thead>
                         <tr>
-                            <th class="border px-4 py-2">Source of Variation</th>
-                            <th class="border px-4 py-2">DF</th>
-                            <th class="border px-4 py-2">SS</th>
-                            <th class="border px-4 py-2">MS</th>
-                            <th class="border px-4 py-2">F-value</th>
+                            <th>Source of Variation</th>
+                            <th>DF</th>
+                            <th>SS</th>
+                            <th>MS</th>
+                            <th>F-value</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td class="border px-4 py-2">Treatments</td>
-                            <td class="border px-4 py-2">${treatmentDF}</td>
-                            <td class="border px-4 py-2">${treatmentSS.toFixed(2)}</td>
-                            <td class="border px-4 py-2">${treatmentMS.toFixed(2)}</td>
-                            <td class="border px-4 py-2">${fValue.toFixed(2)}</td>
+                            <td>Treatments</td>
+                            <td>${treatmentDF}</td>
+                            <td>${treatmentSS.toFixed(2)}</td>
+                            <td>${treatmentMS.toFixed(2)}</td>
+                            <td>${fValue.toFixed(2)}</td>
                         </tr>
             `;
             
             if (design === 'RBD') {
                 resultsHTML += `
                     <tr>
-                        <td class="border px-4 py-2">Blocks</td>
-                        <td class="border px-4 py-2">${blockDF}</td>
-                        <td class="border px-4 py-2">${blockSS.toFixed(2)}</td>
-                        <td class="border px-4 py-2">${blockMS.toFixed(2)}</td>
-                        <td class="border px-4 py-2">-</td>
+                        <td>Blocks</td>
+                        <td>${blockDF}</td>
+                        <td>${blockSS.toFixed(2)}</td>
+                        <td>${blockMS.toFixed(2)}</td>
+                        <td>-</td>
                     </tr>
                 `;
             }
             
             resultsHTML += `
                         <tr>
-                            <td class="border px-4 py-2">Error</td>
-                            <td class="border px-4 py-2">${errorDF}</td>
-                            <td class="border px-4 py-2">${errorSS.toFixed(2)}</td>
-                            <td class="border px-4 py-2">${errorMS.toFixed(2)}</td>
-                            <td class="border px-4 py-2">-</td>
+                            <td>Error</td>
+                            <td>${errorDF}</td>
+                            <td>${errorSS.toFixed(2)}</td>
+                            <td>${errorMS.toFixed(2)}</td>
+                            <td>-</td>
                         </tr>
                         <tr>
-                            <td class="border px-4 py-2">Total</td>
-                            <td class="border px-4 py-2">${totalDF}</td>
-                            <td class="border px-4 py-2">${totalSS.toFixed(2)}</td>
-                            <td class="border px-4 py-2">-</td>
-                            <td class="border px-4 py-2">-</td>
+                            <td>Total</td>
+                            <td>${totalDF}</td>
+                            <td>${totalSS.toFixed(2)}</td>
+                            <td>-</td>
+                            <td>-</td>
                         </tr>
                     </tbody>
                 </table>
-                <p class="mb-4">Grand Mean: ${grandMean.toFixed(2)}</p>
-                <h3 class="text-xl font-bold mb-2">Treatment Means:</h3>
-                <ul class="list-disc list-inside mb-4">
+                <p>Grand Mean: ${grandMean.toFixed(2)}</p>
+                <h4>Treatment Means:</h4>
+                <ul>
                     ${treatmentMeans.map((mean, i) => `<li>Treatment ${String.fromCharCode(65 + i)}: ${mean.toFixed(2)}</li>`).join('')}
                 </ul>
             `;
             
             // Add visualizations
             resultsHTML += `
-                <h3 class="text-xl font-bold mb-2">Visualizations:</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <h4>Visualizations:</h4>
+                <div class="grid">
                     <div>
                         <canvas id="treatmentMeansChart"></canvas>
                     </div>
@@ -320,8 +322,8 @@
                     datasets: [{
                         label: 'Treatment Means',
                         data: treatmentMeans,
-                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1
                     }]
                 },
@@ -358,8 +360,8 @@
                     data: [
                         { x: String.fromCharCode(65 + i), y: [min, q1, median, q3, max] }
                     ],
-                    backgroundColor: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.5)`,
-                    borderColor: 'rgba(0, 0, 0, 1)',
+                    backgroundColor: `hsla(${i * 360 / data.length}, 70%, 50%, 0.5)`,
+                    borderColor: `hsla(${i * 360 / data.length}, 70%, 50%, 1)`,
                     borderWidth: 1
                 };
             });
@@ -387,12 +389,14 @@
         function loadExample(exampleNumber) {
             const numTreatmentsInput = document.getElementById('numTreatments');
             const numReplicationsInput = document.getElementById('numReplications');
+            const numSetsInput = document.getElementById('numSets');
             const designInput = document.getElementById('design');
             const dataInput = document.getElementById('dataInput');
             
             if (exampleNumber === 1) {
                 numTreatmentsInput.value = 3;
                 numReplicationsInput.value = 4;
+                numSetsInput.value = 1;
                 designInput.value = 'CRD';
                 dataInput.value = `123 123 131 133
 142 149 147 134
@@ -400,6 +404,7 @@
             } else if (exampleNumber === 2) {
                 numTreatmentsInput.value = 3;
                 numReplicationsInput.value = 4;
+                numSetsInput.value = 1;
                 designInput.value = 'RBD';
                 dataInput.value = `25.0 23.0 24.3 26.5
 28.5 24.9 27.3 29.2
@@ -407,5 +412,6 @@
             }
         }
     </script>
+
 </body>
 </html>
