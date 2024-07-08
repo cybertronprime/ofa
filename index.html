@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Factor Analysis Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="number"], select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>One Factor Analysis Tool</h1>
+    
+    <div class="input-group">
+        <label for="numTreatments">Number of Treatments:</label>
+        <input type="number" id="numTreatments" value="3" min="2">
+    </div>
+    
+    <div class="input-group">
+        <label for="numReplications">Number of Replications:</label>
+        <input type="number" id="numReplications" value="4" min="2">
+    </div>
+    
+    <div class="input-group">
+        <label for="numSets">Number of Sets (Characters):</label>
+        <input type="number" id="numSets" value="2" min="1">
+    </div>
+    
+    <div class="input-group">
+        <label for="design">Select Design:</label>
+        <select id="design">
+            <option value="CRD">Completely Randomized Design (CRD)</option>
+            <option value="RBD">Randomized Complete Block Design (RBD)</option>
+        </select>
+    </div>
+    
+    <div class="input-group">
+        <label for="transformation">Transformation:</label>
+        <select id="transformation">
+            <option value="none">No Transformation</option>
+            <option value="square_root">Square Root</option>
+            <option value="angular">Angular</option>
+        </select>
+    </div>
+    
+    <div class="input-group">
+        <label for="dataInput">Enter Data (space or tab separated):</label>
+        <textarea id="dataInput" rows="6">123 123 131 133
+142 149 147 134
+147 172 143 139
+25.0 23.0 24.3 26.5
+28.5 24.9 27.3 29.2
+41.3 42.5 41.3 46.5</textarea>
+    </div>
+    
+    <button onclick="analyzeData()">Analyze Data</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        function analyzeData() {
+            const numTreatments = parseInt(document.getElementById('numTreatments').value);
+            const numReplications = parseInt(document.getElementById('numReplications').value);
+            const numSets = parseInt(document.getElementById('numSets').value);
+            const design = document.getElementById('design').value;
+            const transformation = document.getElementById('transformation').value;
+            const dataInput = document.getElementById('dataInput').value;
+            
+            // Parse the input data
+            const data = dataInput.trim().split('\n').map(row => row.trim().split(/\s+/).map(Number));
+            
+            // Perform the analysis for each set
+            let allResults = '';
+            for (let set = 0; set < numSets; set++) {
+                const setData = data.slice(set * numTreatments, (set + 1) * numTreatments);
+                const results = performAnalysis(setData, numTreatments, numReplications, design, transformation);
+                allResults += `<h2>Analysis for Set ${set + 1}</h2>` + results;
+            }
+            
+            // Display the results
+            document.getElementById('results').innerHTML = allResults;
+            
+            // Add download button
+            const downloadBtn = document.createElement('button');
+            downloadBtn.textContent = 'Download Results';
+            downloadBtn.onclick = () => downloadResults(allResults);
+            document.getElementById('results').appendChild(downloadBtn);
+        }
+        
+        function performAnalysis(data, numTreatments, numReplications, design, transformation) {
+            // Apply transformation if needed
+            if (transformation !== 'none') {
+                data = data.map(row => row.map(val => transformValue(val, transformation)));
+            }
+            
+            // Calculate basic statistics
+            const grandTotal = data.flat().reduce((sum, val) => sum + val, 0);
+            const grandMean = grandTotal / (numTreatments * numReplications);
+            const treatmentTotals = data.map(row => row.reduce((sum, val) => sum + val, 0));
+            const treatmentMeans = treatmentTotals.map(total => total / numReplications);
+            
+            // Calculate Sum of Squares
+            const totalSS = data.flat().reduce((sum, val) => sum + Math.pow(val - grandMean, 2), 0);
+            const treatmentSS = treatmentTotals.reduce((sum, total) => sum + Math.pow(total / numReplications - grandMean, 2), 0) * numReplications;
+            
+            let blockSS = 0;
+            if (design === 'RBD') {
+                const blockTotals = Array(numReplications).fill(0);
+                for (let i = 0; i < numTreatments; i++) {
+                    for (let j = 0; j < numReplications; j++) {
+                        blockTotals[j] += data[i][j];
+                    }
+                }
+                blockSS = blockTotals.reduce((sum, total) => sum + Math.pow(total / numTreatments - grandMean, 2), 0) * numTreatments;
+            }
+            
+            const errorSS = totalSS - treatmentSS - blockSS;
+            
+            // Calculate Degrees of Freedom
+            const totalDF = numTreatments * numReplications - 1;
+            const treatmentDF = numTreatments - 1;
+            const blockDF = design === 'RBD' ? numReplications - 1 : 0;
+            const errorDF = totalDF - treatmentDF - blockDF;
+            
+            // Calculate Mean Squares
+            const treatmentMS = treatmentSS / treatmentDF;
+            const blockMS = blockSS / blockDF;
+            const errorMS = errorSS / errorDF;
+            
+            // Calculate F-value
+            const fValue = treatmentMS / errorMS;
+            
+            // Prepare results HTML
+            let resultsHTML = `
+                <table>
+                    <tr><th>Source of Variation</th><th>DF</th><th>SS</th><th>MS</th><th>F-value</th></tr>
+                    <tr><td>Treatments</td><td>${treatmentDF}</td><td>${treatmentSS.toFixed(2)}</td><td>${treatmentMS.toFixed(2)}</td><td>${fValue.toFixed(2)}</td></tr>
+            `;
+            
+            if (design === 'RBD') {
+                resultsHTML += `<tr><td>Blocks</td><td>${blockDF}</td><td>${blockSS.toFixed(2)}</td><td>${blockMS.toFixed(2)}</td><td>-</td></tr>`;
+            }
+            
+            resultsHTML += `
+                    <tr><td>Error</td><td>${errorDF}</td><td>${errorSS.toFixed(2)}</td><td>${errorMS.toFixed(2)}</td><td>-</td></tr>
+                    <tr><td>Total</td><td>${totalDF}</td><td>${totalSS.toFixed(2)}</td><td>-</td><td>-</td></tr>
+                </table>
+                <p>Grand Mean: ${grandMean.toFixed(2)}</p>
+                <h3>Treatment Means:</h3>
+                <ul>
+                    ${treatmentMeans.map((mean, i) => `<li>Treatment ${String.fromCharCode(65 + i)}: ${mean.toFixed(2)}</li>`).join('')}
+                </ul>
+            `;
+            
+            return resultsHTML;
+        }
+        
+        function transformValue(value, transformation) {
+            switch (transformation) {
+                case 'square_root':
+                    return Math.sqrt(value);
+                case 'angular':
+                    return Math.asin(Math.sqrt(value / 100)) * (180 / Math.PI);
+                default:
+                    return value;
+            }
+        }
+        
+        function downloadResults(results) {
+            const blob = new Blob([results.replace(/<[^>]+>/g, '')], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'one_factor_analysis_results.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
